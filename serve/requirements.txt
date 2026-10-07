@@ -1,0 +1,5 @@
+# CPU 추론 기준. torch CPU판은 Dockerfile에서 별도 인덱스로 설치(이미지 경량화).
+torch==2.5.1
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4

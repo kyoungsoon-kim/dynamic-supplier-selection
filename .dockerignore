@@ -1,0 +1,8 @@
+# 이미지에 안 넣을 것 (빌드 빠르게 + 이미지 가볍게)
+notebooks/
+docs/
+src/
+*.md
+.git/
+__pycache__/
+*.pyc

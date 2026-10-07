@@ -32,10 +32,14 @@
 * **T-test 검증 기반 업데이트:** 에폭마다 통계적 가설 검정(t-test)을 수행하여 샘플링 정책이 기존 베이스라인보다 유의미하게 뛰어날 때만 베이스라인 가중치를 갱신하도록 설계하여 학습 안정성을 극대화했습니다.
 
 ## 📊 시뮬레이션 결과 및 성과 (Results)
-전통적인 SCM 최적화 방식인 **Base Stock Policy (BSP) 휴리스틱 모델**과 **RL-Transformer 에이전트**의 100일간 시뮬레이션 성능비교를 수행했습니다.
+전통적인 SCM 최적화 방식인 **단일 최적 Base Stock Policy (BSP) 휴리스틱**과 **RL-Transformer 에이전트**의 시뮬레이션 성능비교를 수행했습니다. 아래 재검증 수치는 **200일 · 8개 시드** 동일 조건에서 측정했습니다.
 
-* **비용 최소화 달성:** 불확실성이 높은 변동 수요 상황에서 RL 에이전트가 리드타임을 선제적으로 계산하여 주문을 최적화함으로써 뉴스벤더 분위수를 따르는 BSP 모델 대비 **총비용의 비약적인 절감**(**59%감소**, BSP:20,884,283 vs DRL with Transformer: 8,626,090)을 증명했습니다.
+* **공정 벤치마크 대비 약 15% 절감:** 5개 업체 중 **단일 최적 조달정책(base-stock)** 을 공정한 비교 기준으로 삼았을 때, RL 에이전트가 재고 긴급도·계절성·업체 가용성에 따라 공급업체와 주문량을 동적으로 조합해 **총비용 약 15.2% 절감**(단일 최적 8.93M → RL 7.57M)을 달성했습니다.
+* **재검증 이력 (측정 프로토콜 정직성):** 초기 실험은 비교 기준을 최악 조건 업체로 잡아 "59% 절감"으로 측정됐으나, 공정 기준이 아니라고 판단해 폐기했습니다. 재검증 중 환경의 MOQ 클램핑으로 주문량 정책의 gradient가 소실되고 엔트로피 부재로 정책이 조기 붕괴하는 학습 결함을 진단했고, **구조는 유지한 채 학습만 교정**해 공정 기준에서 휴리스틱을 넘어섰습니다.
+* **측정의 한계:** 업체별 최적 base-stock을 그리드 서치한 평가 스크립트는 저장소에 포함되어 있지 않습니다. 측정 과정과 결과 표는 [`serve/POLICY_ANALYSIS.md`](./serve/POLICY_ANALYSIS.md), 재학습 로그는 `serve/train_console.log`에 남겨 두었습니다.
+
 ![BSP vs RL 비용 비교](./docs/images/BSP_vs_RL.png)
+> 위 그래프는 폐기한 **초기 측정(100일, 최악 조건 업체 기준)** 의 기록입니다. 재검증 수치와 다릅니다.
 
 * **제약 조건 관리 능력:** 창고 용량 한계를 넘어설 때 발생하는 페널티 비용을 회피하기 위해, 에이전트가 스스로 안전재고 수준을 동적으로 조절하는 자율적 제어 패턴을 보였습니다.
 
@@ -43,6 +47,11 @@
 * `src/train_model_local.py`: 로컬 자원을 활용하여 듀얼 디코더 정책 네트워크를 강화학습시키는 메인 코드
 * `src/Test_model.py`: 학습된 최적 모델 가중치(`best_model_epoch_049_cost_32.pt`)를 불러와 Heuristic 알고리즘과 대조 평가하는 시뮬레이터
 * `notebooks/Test_SCM_Transformer_GRB.ipynb`: 시뮬레이션 로그 및 누적 비용 그래프 확인을 위한 분석 노트북
+* `serve/app.py` · `serve/model.py`: 학습된 정책을 서빙하는 FastAPI 추론 API (`POST /predict`, `GET /health`)
+* `serve/Dockerfile`: CPU 전용 torch 기반 추론 이미지 레시피
+* `serve/train.py` · `serve/train_v3.py`: 재검증 이후 다시 작성한 REINFORCE 학습 코드 (v3 = 업체 가용성 인지 환경)
+* `serve/retrained/`: 재학습 가중치 (`best_model_retrained.pt` = 15.2% 절감을 낸 모델, `best_model_v3.pt` = 현재 서빙 모델)
+* `serve/DEPLOYMENT.md` · `serve/POLICY_ANALYSIS.md`: 배포 기록과 정책 재검증 분석
 * `docs/mdp_formulation.pdf`: Zipkin(2008) 기반 이산 시간 재고 시스템 수리 모델 전문
 * `docs/algorithm_pseudocode.pdf`: 듀얼 디코더 순전파 및 Baseline 갱신 알고리즘의 수도코드
 * `docs/mdp_trajectory.pdf`: 상태-행동-비용 변화 흐름을 추적한 에피소드 시뮬레이션 로그 샘플
@@ -55,6 +64,20 @@
 * **비용 구조**: 재고유지비(h) + 백오더 페널티(b, 이월) + 구매비 + 트럭 배송비 + 창고 초과 페널티
 
 ![Demand Distribution](./docs/images/demand_distribution.png)
+
+## 🌐 배포 (Serving & Demo)
+학습된 정책을 추론 서비스로 포장해 두 가지 형태로 제공합니다.
+
+* **라이브 데모 (Hugging Face Spaces, Gradio):** <https://huggingface.co/spaces/ksk00/dynamic-supplier-selection> — 재고·입고 예정·업체 가용성을 입력하면 공급업체와 주문량을 추천합니다.
+* **추론 API (FastAPI + Docker):** 아래 명령으로 로컬 컨테이너에서 실행합니다. 이미지는 CPU 전용 torch를 사용해 약 1.31GB입니다.
+
+```bash
+docker build -f serve/Dockerfile -t dss-api .
+docker run -d --name dss -p 8000:8000 dss-api
+curl -X POST http://localhost:8000/predict -H "Content-Type: application/json"   -d '{"on_hand":300,"pipeline":[0,0,0,0,0,0,0],"day_of_year":100,"available":[true,true,true,true,true]}'
+```
+
+공개 배포된 것은 Gradio 데모이며, FastAPI 컨테이너는 로컬 실행까지 확인했습니다. 레지스트리 등록과 클라우드 배포는 하지 않았습니다. 자세한 기록은 [`serve/DEPLOYMENT.md`](./serve/DEPLOYMENT.md)에 있습니다.
 
 ## 🚀 시작하기 (How to Run)
 ```bash
