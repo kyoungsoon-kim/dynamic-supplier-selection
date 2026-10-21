@@ -1,0 +1,135 @@
+{
+  "repo_commit": "b60d7cafe1fb48b5003213d2e3d4242313f4c322",
+  "sha256": {
+    "serve/benchmark.py": "610270d5ecded9ef83f0a55709ae8b75842cc5796516fd6f8459fb0de2536b62",
+    "models/best_model_epoch_049_cost_32.pt": "f2f04cf6f690514b93586ba8ecbcd86b5d018f78a80efc7f54cff6f46eab5e81",
+    "serve/retrained/best_model_retrained.pt": "e454190de1ae26e4525236f23d6df8c68700215f567f5149f27d47b6a3bfbd5b",
+    "serve/retrained/best_model_v3.pt": "b9653ce8391c8f6de06f0065670d161c46a47dc5352f7920311a350fb4ec38e6",
+    "serve/model.py": "c43c2a02e83299392118c35f6cbf19d1e81e392fe02316216e6a4ccabd049a7a",
+    "serve/train.py": "f833e41cd70c229ff20c7850cd498b5e02b687cb32a3e8351c7cb87d1c395b5c",
+    "serve/train_v3.py": "4ffcd234cf650a061cf2bb2107621ce7e3b7abff2de3808c3b294c92943e2f38"
+  },
+  "date": "2026-10-22",
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "torch": "2.6.0+cu124",
+  "device": "cpu",
+  "torch_num_threads": 1,
+  "days": 200,
+  "batch": 256,
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "grid": {
+    "start": 0,
+    "stop_inclusive": 5000,
+    "step": 100
+  },
+  "full_grid_stdout_rounded": {
+    "A": {
+      "cost": 10915065,
+      "S": 3000
+    },
+    "B": {
+      "cost": 8703022,
+      "S": 2800
+    },
+    "C": {
+      "cost": 9051873,
+      "S": 2100
+    },
+    "D": {
+      "cost": 11077582,
+      "S": 1100
+    },
+    "E": {
+      "cost": 14387573,
+      "S": 700
+    }
+  },
+  "policies": {
+    "bsp_B_S2800": {
+      "mean_cost": 8703021.625,
+      "per_seed_mean_cost": [
+        8569833.0,
+        8732824.0,
+        8370131.0,
+        8644529.0,
+        9068396.0,
+        9230742.0,
+        8624603.0,
+        8383115.0
+      ],
+      "usage_counts": [
+        190618.0,
+        0.0,
+        218982.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "old_v1": {
+      "mean_cost": 8844279.3125,
+      "per_seed_mean_cost": [
+        8547776.0,
+        8722403.0,
+        8241472.0,
+        8744296.0,
+        9980220.0,
+        9642798.0,
+        8661611.0,
+        8213658.5
+      ],
+      "usage_counts": [
+        10247.0,
+        0.0,
+        261323.0,
+        0.0,
+        0.0,
+        138030.0
+      ]
+    },
+    "retrained_v1": {
+      "mean_cost": 7651210.4375,
+      "per_seed_mean_cost": [
+        7681583.0,
+        7729555.5,
+        7166983.0,
+        7742569.5,
+        7973032.5,
+        7862995.0,
+        7792164.0,
+        7260801.0
+      ],
+      "usage_counts": [
+        143009.0,
+        0.0,
+        245612.0,
+        10191.0,
+        10788.0,
+        0.0
+      ]
+    }
+  },
+  "comparison": {
+    "saving_vs_selected_bsp_percent": 12.085586280500593,
+    "saving_vs_old_percent": 13.489724067327735,
+    "old_over_bsp": 1.0162308786059118,
+    "seed_wins": 8
+  },
+  "limitations": [
+    "Grid tuning and reported evaluation share the same scenarios.",
+    "v1 training/selection provenance is incomplete; current trainers select checkpoints on seeds 0-3.",
+    "v3 serving checkpoint and availability environment are not evaluated here.",
+    "tau=1 arrives before demand on the order day.",
+    "No terminal settlement.",
+    "Exploratory CUDA grid was stopped after A; its A cost differed and is not a complete comparison."
+  ]
+}
